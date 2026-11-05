@@ -88,7 +88,8 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
+// Static assets are endpoints too, so they must opt out of the sign-in fallback policy.
+app.MapStaticAssets().AllowAnonymous();
 app.MapHealthChecks("/healthz").AllowAnonymous();
 app.MapControllerRoute(
         name: "areas",
