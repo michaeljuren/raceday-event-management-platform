@@ -1,0 +1,109 @@
+@model List<DashboardEvent>
+@{
+    ViewData["Title"] = "Organiser dashboard";
+    var upcoming = Model.Where(e => e.IsUpcoming && e.Status != "Cancelled").ToList();
+    var next = upcoming.Where(e => e.Status == "Published").OrderBy(e => e.EventDate).FirstOrDefault();
+    var totalEnrolments = Model.Sum(e => e.TotalEnrolments);
+    var awaitingResults = Model.Count(e => !e.IsUpcoming && e.Status == "Published");
+    var drafts = Model.Count(e => e.Status == "Draft");
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+}
+<div class="rd-page-header">
+    <div>
+        <p class="rd-eyebrow">Race office</p>
+        <h1 class="rd-display">Dashboard</h1>
+        <p class="text-secondary">@(isAdmin ? "Every event on the platform." : "Your events at a glance.")</p>
+    </div>
+    @if (User.IsInRole(AppRoles.Organizer))
+    {
+        <div class="rd-actions">
+            <a class="btn btn-rd" asp-controller="Events" asp-action="Create">+ New event</a>
+        </div>
+    }
+</div>
+
+<partial name="_StatusMessages" />
+
+<div class="rd-stats">
+    <div class="rd-stat">
+        <div class="rd-stat-label">Events</div>
+        <div class="rd-stat-value">@Model.Count</div>
+        <div class="rd-stat-hint">@drafts draft@(drafts == 1 ? "" : "s")</div>
+    </div>
+    <div class="rd-stat is-blue">
+        <div class="rd-stat-label">Total enrolments</div>
+        <div class="rd-stat-value">@totalEnrolments</div>
+        <div class="rd-stat-hint">Active entries across all events</div>
+    </div>
+    <div class="rd-stat is-green">
+        <div class="rd-stat-label">Upcoming</div>
+        <div class="rd-stat-value">@upcoming.Count</div>
+        <div class="rd-stat-hint">@(next is null ? "Nothing published yet" : $"Next: {Display.ShortDate(next.EventDate)}")</div>
+    </div>
+    <div class="rd-stat is-yellow">
+        <div class="rd-stat-label">Awaiting results</div>
+        <div class="rd-stat-value">@awaitingResults</div>
+        <div class="rd-stat-hint">Past events not yet completed</div>
+    </div>
+</div>
+
+<section aria-labelledby="events-heading">
+    <div class="rd-section-title">
+        <h2 id="events-heading">Events</h2>
+        <a asp-controller="Events" asp-action="Index">Manage events &rarr;</a>
+    </div>
+    @if (Model.Count == 0)
+    {
+        <div class="rd-empty-inline">
+            You haven't created any events yet.
+            @if (User.IsInRole(AppRoles.Organizer))
+            {
+                <div class="mt-3"><a class="btn btn-rd" asp-controller="Events" asp-action="Create">Create your first event</a></div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="rd-table-wrap">
+            <table class="table rd-table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Event</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="rd-num">Categories</th>
+                        <th scope="col" class="rd-num">Enrolments</th>
+                        <th scope="col" class="rd-num">Results</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a class="fw-semibold" asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.EventName</a>
+                                <div class="small text-secondary">@e.VenueName, @e.City</div>
+                            </td>
+                            <td class="text-nowrap">
+                                @Display.ShortDate(e.EventDate)
+                                <div class="small text-secondary">@(e.IsUpcoming ? $"in {e.EventDate.DayNumber - Display.Today.DayNumber} days" : "past")</div>
+                            </td>
+                            <td><partial name="_StatusBadge" model="e.Status" /></td>
+                            <td class="rd-num">@e.CategoryCount</td>
+                            <td class="rd-num fw-semibold">@e.TotalEnrolments</td>
+                            <td class="rd-num">@e.ResultsRecorded</td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-rd-ghost" asp-controller="Enrolments" asp-action="Index" asp-route-eventId="@e.EventId">Roster</a>
+                                @if (e.EventDate <= Display.Today && e.Status is "Published" or "Completed")
+                                {
+                                    <a class="btn btn-sm btn-rd-blue" asp-controller="Results" asp-action="Index" asp-route-eventId="@e.EventId">Results</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
