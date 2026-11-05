@@ -1,6 +1,7 @@
 name: CI
 
-# Build the solution and run every unit test on each push, on pull requests into main,
+# Build the solution (API, MVC web app and tests), run every test and validate the web app's
+# Dockerfile on each push, on pull requests into main,
 # and on demand from the Actions tab.
 on:
   push:
@@ -28,6 +29,9 @@ jobs:
       - name: Build
         run: dotnet build RaceDay.sln --no-restore --configuration Release
 
+      - name: Build MVC web app
+        run: dotnet build src/RaceDay.Web --no-restore --configuration Release
+
       - name: Verify EF Core migrations match the model
         run: |
           dotnet tool install --global dotnet-ef --version 10.0.13
@@ -45,3 +49,15 @@ jobs:
           name: test-results
           path: TestResults
           if-no-files-found: ignore
+
+  docker-build:
+    # Validates that the web app's Dockerfile builds; the image is not pushed anywhere.
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build RaceDay.Web Docker image
+        run: docker build --file src/RaceDay.Web/Dockerfile --tag raceday-web:${{ github.sha }} .
