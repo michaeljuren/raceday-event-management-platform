@@ -1,0 +1,34 @@
+@model EventListViewModel
+@{
+    ViewData["Title"] = "Find races";
+    var active = ViewData["ActiveEntries"] as List<Entry> ?? [];
+    var firstName = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
+}
+<div class="rd-page-header">
+    <div>
+        <p class="rd-eyebrow">Hi @firstName</p>
+        <h1 class="rd-display">Find your next race</h1>
+        <p class="text-secondary">Upcoming events across South Africa.</p>
+    </div>
+    <div class="rd-actions">
+        <a class="btn btn-rd-ghost" asp-controller="Enrolments" asp-action="Index">My enrolments</a>
+        <a class="btn btn-rd-ghost" asp-controller="Results" asp-action="Index">My results</a>
+    </div>
+</div>
+
+<partial name="_StatusMessages" />
+
+@if (active.Count > 0)
+{
+    var next = active[0];
+    <div class="rd-alert rd-alert-info mb-4">
+        <span class="rd-alert-icon" aria-hidden="true">i</span>
+        <span>
+            You're entered in <strong>@active.Count</strong> upcoming event@(active.Count == 1 ? "" : "s").
+            Next up: <a asp-controller="Events" asp-action="Details" asp-route-id="@next.EventId">@next.EventName</a>
+            (@next.CategoryName) on @Display.Date(next.EventDate).
+        </span>
+    </div>
+}
+
+<partial name="_EventList" model="Model" />
