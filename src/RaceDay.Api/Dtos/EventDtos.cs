@@ -64,14 +64,18 @@ public record EventSummaryResponse(
     int OrganizerId,
     string OrganizerName,
     EventVenueSummary Venue,
-    IReadOnlyList<decimal> DistancesKm)
+    IReadOnlyList<decimal> DistancesKm,
+    string? BannerImageUrl)
 {
     public static EventSummaryResponse From(Event e) => new(
         e.EventId, e.EventName, e.Discipline, e.EventDate, e.StartTime, e.Status,
         e.OrganizerId, $"{e.Organizer.FirstName} {e.Organizer.LastName}",
         new EventVenueSummary(e.Venue.VenueId, e.Venue.VenueName, e.Venue.City, e.Venue.Province),
-        e.Categories.Select(c => c.DistanceKm).Distinct().OrderBy(d => d).ToList());
+        e.Categories.Select(c => c.DistanceKm).Distinct().OrderBy(d => d).ToList(),
+        e.BannerImageUrl);
 }
+
+public record BannerUploadResponse(int EventId, string BannerImageUrl);
 
 public record EventDetailResponse(
     int EventId,

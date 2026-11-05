@@ -5,6 +5,7 @@ using RaceDay.Api.Authorization;
 using RaceDay.Api.Data;
 using RaceDay.Api.Dtos;
 using RaceDay.Api.Models;
+using RaceDay.Api.Services;
 
 namespace RaceDay.Api.Controllers;
 
@@ -233,6 +234,67 @@ public class EventsController(RaceDayDbContext db, TimeProvider clock) : ApiCont
         evt.UpdatedAt = clock.GetUtcNow().UtcDateTime;
         await db.SaveChangesAsync(ct);
         return Ok(EventDetailResponse.From(evt));
+    }
+
+    /// <summary>Upload (or replace) the event's banner image.</summary>
+    /// <remarks>
+    /// Send <c>multipart/form-data</c> with a single <c>file</c> field: a JPEG, PNG or WebP image of at most 5 MB.
+    /// The image is stored in Azure Blob Storage and the event's <c>bannerImageUrl</c> is set to its URL.
+    /// </remarks>
+    [HttpPost("{id:int}/banner")]
+    [Authorize(Roles = RoleNames.OrganizerOrAdmin)]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(BannerRules.MaxBytes + 64 * 1024)]
+    [ProducesResponseType<BannerUploadResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> UploadBanner(int id, IFormFile? file, [FromServices] IBannerStorage storage, CancellationToken ct)
+    {
+        var evt = await db.Events.SingleOrDefaultAsync(e => e.EventId == id, ct);
+        if (evt is null)
+        {
+            return NotFoundProblem($"Event {id} not found.");
+        }
+
+        if (!CanManage(evt))
+        {
+            return ForbiddenProblem("Only the event's organizer or an admin can change its banner.");
+        }
+
+        if (file is null)
+        {
+            return BadRequestProblem("file", "Choose an image file to upload.");
+        }
+
+        if (BannerRules.Validate(file.ContentType, file.Length) is { } error)
+        {
+            return BadRequestProblem("file", error);
+        }
+
+        if (!storage.IsConfigured)
+        {
+            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Storage unavailable",
+                detail: "Banner storage is not configured on the server.");
+        }
+
+        var previous = evt.BannerImageUrl;
+        await using (var stream = file.OpenReadStream())
+        {
+            evt.BannerImageUrl = await storage.UploadAsync(id, stream, file.ContentType, ct);
+        }
+
+        evt.UpdatedAt = clock.GetUtcNow().UtcDateTime;
+        await db.SaveChangesAsync(ct);
+
+        if (!string.IsNullOrEmpty(previous))
+        {
+            await storage.DeleteAsync(previous, ct);
+        }
+
+        return Ok(new BannerUploadResponse(id, evt.BannerImageUrl));
     }
 
     private Task<Event?> LoadEventAsync(int id, bool tracking, CancellationToken ct)
