@@ -1,0 +1,129 @@
+@model RaceDay.Web.Areas.Organizer.Models.ResultsPageViewModel
+@using RaceDay.Web.Areas.Organizer.Models
+@{
+    var e = Model.Event;
+    ViewData["Title"] = $"Results · {e.EventName}";
+    var disabled = !Model.CanCapture;
+}
+<nav class="rd-breadcrumb" aria-label="Breadcrumb">
+    <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">&larr; @e.EventName</a>
+</nav>
+
+<div class="rd-page-header">
+    <div>
+        <p class="rd-eyebrow">@Display.Date(e.EventDate) · @e.Venue.VenueName</p>
+        <h1 class="rd-display">Results</h1>
+        <p class="text-secondary">@Model.Captured of @Model.Rows.Count participants captured.</p>
+    </div>
+    @if (Model.CanPublish)
+    {
+        <form asp-action="Publish" asp-route-eventId="@e.EventId" method="post" class="rd-actions"
+              data-confirm="Publish results and mark this event as completed? You can still correct results afterwards.">
+            <button type="submit" class="btn btn-rd">Publish results</button>
+        </form>
+    }
+    else if (e.Status == "Completed")
+    {
+        <span class="rd-badge rd-badge-blue">Results published</span>
+    }
+</div>
+
+<partial name="_StatusMessages" />
+
+@if (!Model.RaceDayReached)
+{
+    <div class="rd-alert rd-alert-info mb-4">
+        <span class="rd-alert-icon" aria-hidden="true">i</span>
+        <span>Results can be captured from race day, @Display.Date(e.EventDate).</span>
+    </div>
+}
+else if (!Model.CanCapture)
+{
+    <div class="rd-alert rd-alert-info mb-4">
+        <span class="rd-alert-icon" aria-hidden="true">i</span>
+        <span>Results can't be captured for a @e.Status.ToLowerInvariant() event.</span>
+    </div>
+}
+
+@if (Model.Rows.Count == 0)
+{
+    <div class="rd-empty-inline">No one is enrolled in this event.</div>
+}
+else
+{
+    @foreach (var row in Model.Rows)
+    {
+        <form id="result-@row.Entry.EntryId" asp-action="Save" asp-route-eventId="@e.EventId" method="post">
+            <input type="hidden" name="EntryId" value="@row.Entry.EntryId" />
+            <input type="hidden" name="ResultId" value="@row.Result?.ResultId" />
+        </form>
+    }
+
+    <div class="rd-table-wrap">
+        <table class="table rd-table">
+            <thead>
+                <tr>
+                    <th scope="col">Participant</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Finish time</th>
+                    <th scope="col">Overall</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Gender</th>
+                    <th scope="col"><span class="visually-hidden">Save</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    var formId = $"result-{row.Entry.EntryId}";
+                    var r = row.Result;
+                    var status = r?.FinishStatus ?? "Finished";
+                    var positionsDisabled = disabled || status != "Finished";
+                    <tr>
+                        <td>
+                            <span class="fw-semibold">@row.Entry.FirstName @row.Entry.LastName</span>
+                            <div class="small text-secondary">Bib @(row.Entry.BibNumber ?? "—") · @row.Entry.Gender</div>
+                        </td>
+                        <td class="small">@row.Entry.CategoryName</td>
+                        <td>
+                            <label class="visually-hidden" for="@formId-status">Finish status</label>
+                            <select id="@formId-status" name="FinishStatus" form="@formId" class="form-select" data-finish-status disabled="@disabled">
+                                @foreach (var s in ResultsPageViewModel.FinishStatuses)
+                                {
+                                    <option value="@s" selected="@(s == status)">@s</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <label class="visually-hidden" for="@formId-time">Finish time</label>
+                            <input id="@formId-time" name="FinishTime" form="@formId" class="form-control" inputmode="numeric"
+                                   placeholder="h:mm:ss" pattern="\d{1,2}:\d{2}(:\d{2}(\.\d{1,3})?)?"
+                                   value="@(r?.FinishTime is { } t ? Display.FinishTime(t) : null)" data-finished-only disabled="@positionsDisabled" />
+                        </td>
+                        <td>
+                            <label class="visually-hidden" for="@formId-overall">Overall position</label>
+                            <input id="@formId-overall" name="OverallPosition" form="@formId" type="number" min="1" class="form-control"
+                                   value="@r?.OverallPosition" data-finished-only disabled="@positionsDisabled" />
+                        </td>
+                        <td>
+                            <label class="visually-hidden" for="@formId-category">Category position</label>
+                            <input id="@formId-category" name="CategoryPosition" form="@formId" type="number" min="1" class="form-control"
+                                   value="@r?.CategoryPosition" data-finished-only disabled="@positionsDisabled" />
+                        </td>
+                        <td>
+                            <label class="visually-hidden" for="@formId-gender">Gender position</label>
+                            <input id="@formId-gender" name="GenderPosition" form="@formId" type="number" min="1" class="form-control"
+                                   value="@r?.GenderPosition" data-finished-only disabled="@positionsDisabled" />
+                        </td>
+                        <td class="text-end">
+                            <button type="submit" form="@formId" class="btn btn-sm @(r is null ? "btn-rd" : "btn-rd-ghost")" disabled="@disabled">
+                                @(r is null ? "Save" : "Update")
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
