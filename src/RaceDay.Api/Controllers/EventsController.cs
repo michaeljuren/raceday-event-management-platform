@@ -71,6 +71,50 @@ public class EventsController(RaceDayDbContext db, TimeProvider clock) : ApiCont
         return Ok(page);
     }
 
+    /// <summary>Organizer dashboard: every event you organise with its enrolment totals.</summary>
+    /// <remarks>
+    /// <c>totalEnrolments</c> counts active (Pending or Confirmed) entries across all of the event's categories.
+    /// Upcoming events (today or later) come first, soonest first, followed by past events, most recent first.
+    /// Admins see every event.
+    /// </remarks>
+    [HttpGet("dashboard")]
+    [Authorize(Roles = RoleNames.OrganizerOrAdmin)]
+    [ProducesResponseType<List<DashboardEventResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Dashboard(CancellationToken ct)
+    {
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        var events = db.Events.AsNoTracking();
+        if (!IsAdmin)
+        {
+            var me = CurrentUserId;
+            events = events.Where(e => e.OrganizerId == me);
+        }
+
+        var rows = await events
+            .Select(e => new DashboardEventResponse(
+                e.EventId,
+                e.EventName,
+                e.Discipline,
+                e.EventDate,
+                e.StartTime,
+                e.Status,
+                e.Venue.VenueName,
+                e.Venue.City,
+                e.Categories.Count,
+                e.Categories.SelectMany(c => c.Entries).Count(en => EntryStatus.Active.Contains(en.Status)),
+                e.Categories.SelectMany(c => c.Entries).Count(en => en.Result != null),
+                e.EventDate >= today))
+            .ToListAsync(ct);
+
+        return Ok(rows
+            .OrderByDescending(r => r.IsUpcoming)
+            .ThenBy(r => r.IsUpcoming ? r.EventDate.DayNumber : -r.EventDate.DayNumber)
+            .ThenBy(r => r.EventName)
+            .ToList());
+    }
+
     /// <summary>Get an event's detail, including its categories.</summary>
     [HttpGet("{id:int}")]
     [AllowAnonymous]

@@ -105,3 +105,18 @@ public record EventDetailResponse(
         e.Categories.OrderBy(c => c.DistanceKm).ThenBy(c => c.CategoryName).Select(CategoryResponse.From).ToList(),
         e.CreatedAt, e.UpdatedAt);
 }
+
+/// <summary>One row of the organizer dashboard.</summary>
+public record DashboardEventResponse(
+    int EventId,
+    string EventName,
+    string Discipline,
+    DateOnly EventDate,
+    TimeOnly StartTime,
+    string Status,
+    string VenueName,
+    string City,
+    int CategoryCount,
+    int TotalEnrolments,
+    int ResultsRecorded,
+    bool IsUpcoming);
