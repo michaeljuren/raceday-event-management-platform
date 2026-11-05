@@ -1,0 +1,43 @@
+@*
+    The one place success, error and validation-summary (non-field) messages are rendered.
+*@
+@{
+    var success = TempData[Flash.SuccessKey] as string;
+    var error = TempData[Flash.ErrorKey] as string;
+    var modelErrors = ViewData.ModelState[string.Empty]?.Errors.Select(e => e.ErrorMessage).ToList() ?? [];
+}
+@if (!string.IsNullOrEmpty(success))
+{
+    <div class="alert rd-alert rd-alert-success alert-dismissible fade show" role="status">
+        <span class="rd-alert-icon" aria-hidden="true">&#10003;</span>
+        <span>@success</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert rd-alert rd-alert-error alert-dismissible fade show" role="alert">
+        <span class="rd-alert-icon" aria-hidden="true">!</span>
+        <span>@error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (modelErrors.Count > 0)
+{
+    <div class="alert rd-alert rd-alert-error" role="alert">
+        <span class="rd-alert-icon" aria-hidden="true">!</span>
+        @if (modelErrors.Count == 1)
+        {
+            <span>@modelErrors[0]</span>
+        }
+        else
+        {
+            <ul class="mb-0 ps-3">
+                @foreach (var message in modelErrors)
+                {
+                    <li>@message</li>
+                }
+            </ul>
+        }
+    </div>
+}

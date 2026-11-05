@@ -1,0 +1,86 @@
+@model RaceDay.Web.Models.Account.RegisterViewModel
+@{
+    ViewData["Title"] = "Create account";
+}
+<section class="rd-auth">
+    <div class="rd-card rd-auth-card rd-auth-card-wide">
+        <p class="rd-eyebrow">Join the start line</p>
+        <h1 class="rd-display">Create your account</h1>
+        <p class="text-secondary mb-4">Enter races as a participant, or organise your own race days.</p>
+
+        <partial name="_StatusMessages" />
+
+        <form asp-action="Register" method="post" novalidate>
+            <fieldset class="mb-4">
+                <legend class="form-label">@Html.DisplayNameFor(m => m.Role)</legend>
+                <div class="rd-choice-group">
+                    <label class="rd-choice">
+                        <input type="radio" asp-for="Role" value="Participant" />
+                        <span><strong>Race</strong><small>Enter events and track my results</small></span>
+                    </label>
+                    <label class="rd-choice">
+                        <input type="radio" asp-for="Role" value="Organizer" />
+                        <span><strong>Organise</strong><small>Create events and manage entries</small></span>
+                    </label>
+                </div>
+                <span asp-validation-for="Role" class="invalid-feedback d-block"></span>
+            </fieldset>
+
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
+                    <span asp-validation-for="FirstName" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-control" autocomplete="family-name" />
+                    <span asp-validation-for="LastName" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                    <div class="form-text">8+ characters with upper- and lower-case letters and a digit.</div>
+                    <span asp-validation-for="Password" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmPassword" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input asp-for="DateOfBirth" type="date" class="form-control" autocomplete="bday" />
+                    <span asp-validation-for="DateOfBirth" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Gender" class="form-label"></label>
+                    <select asp-for="Gender" class="form-select" asp-items="@(new SelectList(RaceDay.Web.Models.Account.RegisterViewModel.Genders))">
+                        <option value="">Select…</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="PhoneNumber" class="form-label"></label> <span class="text-secondary small">(optional)</span>
+                    <input asp-for="PhoneNumber" class="form-control" autocomplete="tel" />
+                    <span asp-validation-for="PhoneNumber" class="invalid-feedback d-block"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-rd w-100 mt-4">Create account</button>
+        </form>
+
+        <p class="mt-4 mb-0 text-center text-secondary">
+            Already registered? <a asp-action="Login">Log in</a>
+        </p>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
