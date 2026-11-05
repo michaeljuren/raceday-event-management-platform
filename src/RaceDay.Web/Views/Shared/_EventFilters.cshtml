@@ -1,0 +1,36 @@
+@model EventFilterViewModel
+<form class="rd-filters" method="get" role="search" aria-label="Filter events">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-lg-4">
+            <label asp-for="Search" class="form-label"></label>
+            <input asp-for="Search" class="form-control" placeholder="Event name or description" />
+        </div>
+        <div class="col-6 col-lg-2">
+            <label asp-for="Discipline" class="form-label"></label>
+            <select asp-for="Discipline" class="form-select" asp-items="@(new SelectList(EventFilterViewModel.Disciplines))">
+                <option value="">Any</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label asp-for="Province" class="form-label"></label>
+            <select asp-for="Province" class="form-select" asp-items="@(new SelectList(EventFilterViewModel.Provinces))">
+                <option value="">Anywhere</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label asp-for="FromDate" class="form-label"></label>
+            <input asp-for="FromDate" type="date" class="form-control" />
+        </div>
+        <div class="col-6 col-lg-2">
+            <label asp-for="ToDate" class="form-label"></label>
+            <input asp-for="ToDate" type="date" class="form-control" />
+        </div>
+        <div class="col-12 d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-rd">Find events</button>
+            @if (Model.HasFilters)
+            {
+                <a class="btn btn-rd-ghost" href="@Context.Request.Path">Clear filters</a>
+            }
+        </div>
+    </div>
+</form>

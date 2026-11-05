@@ -1,0 +1,20 @@
+@model PagerModel
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-5" aria-label="Pages">
+        <ul class="pagination justify-content-center flex-wrap">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link" href="@(Model.Page <= 1 ? "#" : Model.UrlFor(Model.Page - 1))" aria-label="Previous page">&lsaquo;</a>
+            </li>
+            @for (var p = 1; p <= Model.TotalPages; p++)
+            {
+                <li class="page-item @(p == Model.Page ? "active" : "")">
+                    <a class="page-link" href="@Model.UrlFor(p)" aria-current="@(p == Model.Page ? "page" : null)">@p</a>
+                </li>
+            }
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@(Model.Page >= Model.TotalPages ? "#" : Model.UrlFor(Model.Page + 1))" aria-label="Next page">&rsaquo;</a>
+            </li>
+        </ul>
+    </nav>
+}

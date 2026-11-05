@@ -1,0 +1,40 @@
+@model EventDetail
+@* Banner, title and key facts for an event; shared by the public, participant and organizer pages. *@
+<div class="rd-event-banner rd-detail-banner" data-discipline="@Model.Discipline">
+    @if (!string.IsNullOrEmpty(Model.BannerImageUrl))
+    {
+        <img src="@Model.BannerImageUrl" alt="@Model.EventName banner" />
+    }
+</div>
+
+<div class="rd-page-header">
+    <div>
+        <p class="rd-eyebrow">@Model.Discipline · @Model.Venue.Province</p>
+        <h1 class="rd-display">@Model.EventName</h1>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <partial name="_StatusBadge" model="Model.Status" />
+            @if (Model.Status == "Published")
+            {
+                var open = Display.RegistrationOpen(Model.RegistrationOpenDate, Model.RegistrationCloseDate);
+                <span class="rd-badge @(open ? "rd-badge-orange" : "rd-badge-neutral")">@(open ? "Entries open" : "Entries closed")</span>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="rd-card">
+    <dl class="rd-facts">
+        <div><dt>Date</dt><dd>@Display.Date(Model.EventDate)</dd></div>
+        <div><dt>Start time</dt><dd>@Display.Time(Model.StartTime)</dd></div>
+        <div><dt>Venue</dt><dd>@Model.Venue.VenueName<br /><span class="text-secondary fw-normal">@Model.Venue.City</span></dd></div>
+        <div><dt>Distances</dt><dd>@(Model.DistancesKm.Count == 0 ? "TBA" : string.Join(" · ", Model.DistancesKm.Select(Display.Distance)))</dd></div>
+        <div><dt>Entries open</dt><dd>@Display.LocalDateTime(Model.RegistrationOpenDate)</dd></div>
+        <div><dt>Entries close</dt><dd>@Display.LocalDateTime(Model.RegistrationCloseDate)</dd></div>
+        <div><dt>Organiser</dt><dd>@Model.OrganizerName</dd></div>
+    </dl>
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <hr class="my-4" />
+        <p class="mb-0" style="white-space: pre-line">@Model.Description</p>
+    }
+</div>

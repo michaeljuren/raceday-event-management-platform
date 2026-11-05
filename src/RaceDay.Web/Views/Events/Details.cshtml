@@ -1,0 +1,28 @@
+@model EventDetail
+@{
+    ViewData["Title"] = Model.EventName;
+    var signedIn = User.Identity?.IsAuthenticated == true;
+}
+<nav class="rd-breadcrumb" aria-label="Breadcrumb"><a asp-action="Index">&larr; All events</a></nav>
+
+<partial name="_EventOverview" model="Model" />
+
+<section class="rd-card" aria-labelledby="categories-heading">
+    <h2 id="categories-heading" class="rd-card-title">Categories</h2>
+    <partial name="_CategoryList" model="Model.Categories" />
+
+    <div class="rd-alert rd-alert-info mt-4">
+        <span class="rd-alert-icon" aria-hidden="true">i</span>
+        @if (!signedIn)
+        {
+            <span>
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Events", new { area = "Participant", id = Model.EventId })">Log in</a>
+                or <a asp-controller="Account" asp-action="Register">create a participant account</a> to enter this event.
+            </span>
+        }
+        else
+        {
+            <span>Only participant accounts can enter events.</span>
+        }
+    </div>
+</section>

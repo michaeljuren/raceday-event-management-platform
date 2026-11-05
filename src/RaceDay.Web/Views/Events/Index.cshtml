@@ -1,0 +1,14 @@
+@model EventListViewModel
+@{
+    ViewData["Title"] = "Event calendar";
+}
+<div class="rd-page-header">
+    <div>
+        <p class="rd-eyebrow">Event calendar</p>
+        <h1 class="rd-display">Find a race</h1>
+        <p class="text-secondary">Road runs, walks and rides from every province.</p>
+    </div>
+</div>
+
+<partial name="_StatusMessages" />
+<partial name="_EventList" model="Model" />

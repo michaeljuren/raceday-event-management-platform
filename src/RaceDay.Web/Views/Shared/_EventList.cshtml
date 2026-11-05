@@ -1,0 +1,28 @@
+@model EventListViewModel
+@{
+    var action = ViewContext.RouteData.Values["action"] as string;
+}
+<partial name="_EventFilters" model="Model.Filter" />
+
+@if (Model.Error is not null)
+{
+    <div class="alert rd-alert rd-alert-error" role="alert"><span class="rd-alert-icon" aria-hidden="true">!</span><span>@Model.Error</span></div>
+}
+else if (Model.Events.Items.Count == 0)
+{
+    <div class="rd-empty-inline">
+        @(Model.Filter.HasFilters ? "No events match those filters. Try widening your search." : "No upcoming events have been published yet.")
+    </div>
+}
+else
+{
+    <p class="text-secondary mb-3">@Model.Events.TotalCount event@(Model.Events.TotalCount == 1 ? "" : "s") found</p>
+    <div class="rd-event-grid">
+        @foreach (var e in Model.Events.Items)
+        {
+            var card = new EventCardModel(e, Url.EventDetails(User, e.EventId), ShowStatus: e.Status != "Published");
+            <partial name="_EventCard" model="card" />
+        }
+    </div>
+    <partial name="_Pager" model="new PagerModel(Model.Events.Page, Model.Events.TotalPages, p => Url.Action(action, Model.Filter.RouteValues(p))!)" />
+}
