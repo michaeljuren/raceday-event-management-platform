@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RaceDay.Api.Data;
+using RaceDay.Api.Services;
 
 namespace RaceDay.Tests.Infrastructure;
 
@@ -28,8 +29,14 @@ public class RaceDayApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<RaceDayDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<RaceDayDbContext>>();
             services.AddDbContext<RaceDayDbContext>(options => options.UseInMemoryDatabase(_databaseName));
+
+            services.RemoveAll<IBannerStorage>();
+            services.AddSingleton<IBannerStorage>(BannerStorage);
         });
     }
+
+    /// <summary>The fake blob store used instead of Azure, for asserting on uploaded banners.</summary>
+    public InMemoryBannerStorage BannerStorage { get; } = new();
 
     protected override void ConfigureClient(HttpClient client)
     {
