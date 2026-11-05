@@ -1,0 +1,43 @@
+@model EventDetail
+@{
+    ViewData["Title"] = Model.EventName;
+    var raceDayReached = Model.EventDate <= Display.Today;
+    var totalEntries = Model.Categories.Sum(c => c.EntryCount);
+}
+<nav class="rd-breadcrumb" aria-label="Breadcrumb"><a asp-action="Index">&larr; Events</a></nav>
+
+<partial name="_StatusMessages" />
+<partial name="_EventOverview" model="Model" />
+
+<div class="rd-card">
+    <h2 class="rd-card-title">Manage</h2>
+    <div class="rd-actions">
+        <a class="btn btn-rd-ghost" asp-action="Edit" asp-route-id="@Model.EventId">Edit details &amp; banner</a>
+        <a class="btn btn-rd-ghost" asp-controller="Categories" asp-action="Index" asp-route-eventId="@Model.EventId">Categories (@Model.Categories.Count)</a>
+        <a class="btn btn-rd-ghost" asp-controller="Enrolments" asp-action="Index" asp-route-eventId="@Model.EventId">Enrolments (@totalEntries)</a>
+        @if (raceDayReached && Model.Status is "Published" or "Completed")
+        {
+            <a class="btn btn-rd-blue" asp-controller="Results" asp-action="Index" asp-route-eventId="@Model.EventId">Results</a>
+        }
+        @if (Model.Status == "Draft")
+        {
+            <form asp-action="Publish" asp-route-id="@Model.EventId" method="post"
+                  data-confirm="Publish this event? Participants will be able to see and enter it.">
+                <button type="submit" class="btn btn-rd" disabled="@(Model.Categories.Count == 0)">Publish event</button>
+            </form>
+        }
+        @if (Model.Status is "Draft" or "Published")
+        {
+            <a class="btn btn-rd-danger ms-lg-auto" asp-action="Delete" asp-route-id="@Model.EventId">Delete</a>
+        }
+    </div>
+    @if (Model.Status == "Draft" && Model.Categories.Count == 0)
+    {
+        <p class="text-secondary small mt-3 mb-0">Add at least one category before publishing.</p>
+    }
+</div>
+
+<section class="rd-card" aria-labelledby="categories-heading">
+    <h2 id="categories-heading" class="rd-card-title">Categories</h2>
+    <partial name="_CategoryList" model="Model.Categories" />
+</section>

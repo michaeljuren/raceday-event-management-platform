@@ -1,0 +1,32 @@
+@model EventDetail
+@{
+    ViewData["Title"] = $"Delete {Model.EventName}";
+    var entries = Model.Categories.Sum(c => c.EntryCount);
+}
+<nav class="rd-breadcrumb" aria-label="Breadcrumb"><a asp-action="Details" asp-route-id="@Model.EventId">&larr; Back to event</a></nav>
+
+<section class="rd-card mx-auto" style="max-width: 640px">
+    <p class="rd-eyebrow">Delete event</p>
+    <h1 class="rd-display">@Model.EventName</h1>
+    <p class="text-secondary">@Display.Date(Model.EventDate) · @Model.Venue.VenueName</p>
+
+    @if (entries > 0)
+    {
+        <div class="rd-alert rd-alert-error my-4">
+            <span class="rd-alert-icon" aria-hidden="true">!</span>
+            <span>
+                This event has <strong>@entries active entr@(entries == 1 ? "y" : "ies")</strong>.
+                It will be <strong>cancelled</strong> rather than deleted, and every entry will be cancelled.
+            </span>
+        </div>
+    }
+    else
+    {
+        <p class="my-4">The event and its @Model.Categories.Count categor@(Model.Categories.Count == 1 ? "y" : "ies") will be permanently deleted. This can't be undone.</p>
+    }
+
+    <form asp-action="Delete" asp-route-id="@Model.EventId" method="post" class="rd-actions">
+        <button type="submit" class="btn btn-rd-danger">@(entries > 0 ? "Cancel event" : "Delete event")</button>
+        <a class="btn btn-rd-ghost" asp-action="Details" asp-route-id="@Model.EventId">Keep it</a>
+    </form>
+</section>

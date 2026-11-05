@@ -38,7 +38,8 @@ public static class Display
 
     public static string Distance(decimal km) => $"{km.ToString("0.##", CultureInfo.InvariantCulture)} km";
 
-    public static string Money(decimal amount) => amount == 0 ? "Free" : amount.ToString("C", Culture);
+    public static string Money(decimal amount) =>
+        amount == 0 ? "Free" : "R" + amount.ToString("#,##0.00", CultureInfo.InvariantCulture);
 
     public static string FinishTime(TimeOnly? time) => time?.ToString(time.Value.Millisecond > 0 ? "H:mm:ss.fff" : "H:mm:ss", CultureInfo.InvariantCulture) ?? "—";
 

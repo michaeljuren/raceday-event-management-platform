@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Registration windows are stored in UTC by the API and shown in local (SAST) time.
 Display.UseTimeZone(builder.Configuration["App:TimeZone"]);
+
+// Bind and render numbers with a '.' decimal separator (HTML number inputs require it), whatever the host's culture.
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 // ---------- RaceDay API client (all data comes from the API) ----------
 builder.Services.AddRaceDayApi(builder.Configuration);

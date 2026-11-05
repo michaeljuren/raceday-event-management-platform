@@ -1,0 +1,43 @@
+@model PagedResult<EventSummary>
+@{
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+    ViewData["Title"] = isAdmin ? "All events" : "My events";
+}
+<div class="rd-page-header">
+    <div>
+        <p class="rd-eyebrow">Race office</p>
+        <h1 class="rd-display">@ViewData["Title"]</h1>
+        <p class="text-secondary">Drafts, published races and past events.</p>
+    </div>
+    @if (User.IsInRole(AppRoles.Organizer))
+    {
+        <div class="rd-actions">
+            <a class="btn btn-rd" asp-action="Create">+ New event</a>
+        </div>
+    }
+</div>
+
+<partial name="_StatusMessages" />
+
+@if (Model.Items.Count == 0)
+{
+    <div class="rd-empty-inline">
+        No events yet.
+        @if (User.IsInRole(AppRoles.Organizer))
+        {
+            <div class="mt-3"><a class="btn btn-rd" asp-action="Create">Create your first event</a></div>
+        }
+    </div>
+}
+else
+{
+    <div class="rd-event-grid">
+        @foreach (var e in Model.Items)
+        {
+            var card = new EventCardModel(e, Url.Action("Details", new { id = e.EventId })!, ShowStatus: true);
+            <partial name="_EventCard" model="card" />
+        }
+    </div>
+    var pager = new PagerModel(Model.Page, Model.TotalPages, p => Url.Action("Index", new { page = p })!);
+    <partial name="_Pager" model="pager" />
+}
