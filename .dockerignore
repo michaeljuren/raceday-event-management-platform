@@ -1,0 +1,20 @@
+# Keep the Docker build context small: only global.json and src/ are needed.
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/appsettings.Local.json
+**/secrets.json
+**/Dockerfile*
+.git/
+.github/
+.gitignore
+.dockerignore
+database/
+documents/
+images/
+tests/
+TestResults/
+README.md
