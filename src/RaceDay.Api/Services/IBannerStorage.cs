@@ -13,6 +13,10 @@ public interface IBannerStorage
     Task DeleteAsync(string url, CancellationToken ct = default);
 }
 
+/// <summary>The storage service could not be reached or rejected the upload.</summary>
+public class BannerStorageUnavailableException(Exception inner)
+    : Exception("Banner storage is currently unavailable.", inner);
+
 /// <summary>What the API accepts as a banner image.</summary>
 public static class BannerRules
 {

@@ -37,15 +37,23 @@ public class AzureBlobBannerStorage : IBannerStorage
             throw new ArgumentException($"Unsupported banner content type '{contentType}'.", nameof(contentType));
         }
 
-        await EnsureContainerAsync(container, ct);
-
-        var blob = container.GetBlobClient($"events/{eventId}/{Guid.NewGuid():N}{extension}");
-        await blob.UploadAsync(content, new BlobUploadOptions
+        try
         {
-            HttpHeaders = new BlobHttpHeaders { ContentType = contentType, CacheControl = "public, max-age=86400" }
-        }, ct);
+            await EnsureContainerAsync(container, ct);
 
-        return blob.Uri.ToString();
+            var blob = container.GetBlobClient($"events/{eventId}/{Guid.NewGuid():N}{extension}");
+            await blob.UploadAsync(content, new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders { ContentType = contentType, CacheControl = "public, max-age=86400" }
+            }, ct);
+
+            return blob.Uri.ToString();
+        }
+        catch (Exception ex) when (ex is RequestFailedException or AggregateException)
+        {
+            _logger.LogError(ex, "Uploading a banner for event {EventId} to blob storage failed.", eventId);
+            throw new BannerStorageUnavailableException(ex);
+        }
     }
 
     public async Task DeleteAsync(string url, CancellationToken ct = default)

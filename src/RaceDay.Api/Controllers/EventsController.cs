@@ -366,9 +366,15 @@ public class EventsController(RaceDayDbContext db, TimeProvider clock) : ApiCont
         }
 
         var previous = evt.BannerImageUrl;
-        await using (var stream = file.OpenReadStream())
+        try
         {
+            await using var stream = file.OpenReadStream();
             evt.BannerImageUrl = await storage.UploadAsync(id, stream, file.ContentType, ct);
+        }
+        catch (BannerStorageUnavailableException)
+        {
+            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Storage unavailable",
+                detail: "The banner could not be stored right now. Please try again later.");
         }
 
         evt.UpdatedAt = clock.GetUtcNow().UtcDateTime;
