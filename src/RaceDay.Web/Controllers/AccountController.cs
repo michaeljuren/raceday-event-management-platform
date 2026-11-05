@@ -12,10 +12,10 @@ using RaceDay.Web.Services.Api;
 namespace RaceDay.Web.Controllers;
 
 /// <summary>Register, log in and log out. Credentials are checked by the API; this app only keeps the session.</summary>
-[AllowAnonymous]
 public class AccountController(IRaceDayApi api, ITokenStore tokens, ILogger<AccountController> logger) : Controller
 {
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
@@ -27,6 +27,7 @@ public class AccountController(IRaceDayApi api, ITokenStore tokens, ILogger<Acco
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> Login(LoginViewModel model, CancellationToken ct)
     {
         if (!ModelState.IsValid)
@@ -48,6 +49,7 @@ public class AccountController(IRaceDayApi api, ITokenStore tokens, ILogger<Acco
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult Register()
     {
         if (User.Identity?.IsAuthenticated == true)
@@ -59,6 +61,7 @@ public class AccountController(IRaceDayApi api, ITokenStore tokens, ILogger<Acco
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> Register(RegisterViewModel model, CancellationToken ct)
     {
         if (!ModelState.IsValid)
@@ -110,6 +113,7 @@ public class AccountController(IRaceDayApi api, ITokenStore tokens, ILogger<Acco
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult AccessDenied() => View();
 
     private async Task<ClaimsPrincipal> SignInAsync(TokenResponse login)
