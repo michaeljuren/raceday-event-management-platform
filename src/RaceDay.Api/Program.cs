@@ -21,6 +21,10 @@ builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
+// ---------- Banner images (Azure Blob Storage) ----------
+builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(StorageOptions.SectionName));
+builder.Services.AddSingleton<IBannerStorage, AzureBlobBannerStorage>();
+
 // ---------- Authentication (JWT bound to a server-side session) ----------
 builder.Services.AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
