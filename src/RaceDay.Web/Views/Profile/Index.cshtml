@@ -1,0 +1,51 @@
+@model UserProfile
+@{
+    ViewData["Title"] = "My profile";
+    var name = $"{Model.FirstName} {Model.LastName}";
+}
+<section class="mx-auto" style="max-width: 760px">
+    <div class="rd-page-header">
+        <div class="d-flex align-items-center gap-3">
+            <span class="rd-avatar" style="width: 3.5rem; height: 3.5rem; font-size: 1.2rem" aria-hidden="true">@Display.Initials(name)</span>
+            <div>
+                <p class="rd-eyebrow mb-1">@string.Join(" · ", Model.Roles)</p>
+                <h1 class="rd-display mb-0">@name</h1>
+            </div>
+        </div>
+        <div class="rd-actions">
+            <a class="btn btn-rd" asp-action="Edit">Edit profile</a>
+        </div>
+    </div>
+
+    <partial name="_StatusMessages" />
+
+    <div class="rd-card">
+        <h2 class="rd-card-title">Personal details</h2>
+        <dl class="rd-facts">
+            <div><dt>Email</dt><dd>@Model.Email</dd></div>
+            <div><dt>Phone</dt><dd>@(Model.PhoneNumber ?? "—")</dd></div>
+            <div><dt>Date of birth</dt><dd>@Display.ShortDate(Model.DateOfBirth)</dd></div>
+            <div><dt>Gender</dt><dd>@Model.Gender</dd></div>
+            <div><dt>Club</dt><dd>@(Model.ClubName ?? "No club")</dd></div>
+            <div><dt>Member since</dt><dd>@Display.LocalDateTime(Model.CreatedAt).Split(',')[0]</dd></div>
+        </dl>
+    </div>
+
+    <div class="rd-card">
+        <h2 class="rd-card-title">Emergency contact</h2>
+        @if (Model.EmergencyContactName is null && Model.EmergencyContactPhone is null)
+        {
+            <p class="text-secondary mb-0">
+                No emergency contact yet. Race organisers use this if something happens on the course.
+                <a asp-action="Edit">Add one now</a>.
+            </p>
+        }
+        else
+        {
+            <dl class="rd-facts">
+                <div><dt>Name</dt><dd>@(Model.EmergencyContactName ?? "—")</dd></div>
+                <div><dt>Phone</dt><dd>@(Model.EmergencyContactPhone ?? "—")</dd></div>
+            </dl>
+        }
+    </div>
+</section>

@@ -1,0 +1,71 @@
+@model RaceDay.Web.Models.Account.ProfileFormViewModel
+@{
+    ViewData["Title"] = "Edit profile";
+}
+<section class="mx-auto" style="max-width: 760px">
+    <nav class="rd-breadcrumb" aria-label="Breadcrumb"><a asp-action="Index">&larr; My profile</a></nav>
+    <div class="rd-page-header">
+        <div>
+            <p class="rd-eyebrow">My profile</p>
+            <h1 class="rd-display">Edit profile</h1>
+            <p class="text-secondary">Email, date of birth and gender can't be changed here.</p>
+        </div>
+    </div>
+
+    <partial name="_StatusMessages" />
+
+    <form asp-action="Edit" method="post" class="rd-card" novalidate>
+        <div class="rd-form-section">
+            <h2>About you</h2>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
+                    <span asp-validation-for="FirstName" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-control" autocomplete="family-name" />
+                    <span asp-validation-for="LastName" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" autocomplete="tel" />
+                    <span asp-validation-for="PhoneNumber" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="ClubId" class="form-label"></label>
+                    <select asp-for="ClubId" class="form-select" asp-items="Model.Clubs">
+                        <option value="">No club</option>
+                    </select>
+                    <span asp-validation-for="ClubId" class="invalid-feedback d-block"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="rd-form-section">
+            <h2>Emergency contact</h2>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label asp-for="EmergencyContactName" class="form-label"></label>
+                    <input asp-for="EmergencyContactName" class="form-control" />
+                    <span asp-validation-for="EmergencyContactName" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="EmergencyContactPhone" class="form-label"></label>
+                    <input asp-for="EmergencyContactPhone" class="form-control" />
+                    <span asp-validation-for="EmergencyContactPhone" class="invalid-feedback d-block"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="rd-form-actions">
+            <button type="submit" class="btn btn-rd">Save profile</button>
+            <a class="btn btn-rd-ghost" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
