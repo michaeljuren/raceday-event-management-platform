@@ -1,0 +1,95 @@
+@model RaceDay.Web.Areas.Participant.Controllers.EventEntryViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = e.EventName;
+    var canEnter = Model.RegistrationOpen && Model.MyEntry is null && !Model.IsOwnEvent;
+    var categoryError = ViewData.ModelState["categoryId"]?.Errors.FirstOrDefault()?.ErrorMessage;
+}
+<nav class="rd-breadcrumb" aria-label="Breadcrumb"><a asp-controller="Home" asp-action="Index">&larr; Find races</a></nav>
+
+<partial name="_StatusMessages" />
+<partial name="_EventOverview" model="e" />
+
+<section class="rd-card" aria-labelledby="enter-heading">
+    <h2 id="enter-heading" class="rd-card-title">@(canEnter ? "Enter this event" : "Categories")</h2>
+
+    @if (Model.MyEntry is { } entry)
+    {
+        <div class="rd-alert rd-alert-success mb-4">
+            <span class="rd-alert-icon" aria-hidden="true">&#10003;</span>
+            <span>
+                You're entered in <strong>@entry.CategoryName</strong> (@entry.Status.ToLowerInvariant())@(entry.BibNumber is null ? "" : $", bib {entry.BibNumber}").
+                <a asp-controller="Enrolments" asp-action="Index">Manage my enrolments</a>
+            </span>
+        </div>
+    }
+    else if (Model.IsOwnEvent)
+    {
+        <div class="rd-alert rd-alert-info mb-4"><span class="rd-alert-icon" aria-hidden="true">i</span><span>You organise this event, so you can't enter it.</span></div>
+    }
+    else if (!Model.RegistrationOpen)
+    {
+        <div class="rd-alert rd-alert-info mb-4">
+            <span class="rd-alert-icon" aria-hidden="true">i</span>
+            <span>
+                @if (e.Status != "Published")
+                {
+                    @:This event is @e.Status.ToLowerInvariant() and no longer accepts entries.
+                }
+                else if (DateTime.UtcNow < e.RegistrationOpenDate)
+                {
+                    @:Entries open on @Display.LocalDateTime(e.RegistrationOpenDate).
+                }
+                else
+                {
+                    @:Entries closed on @Display.LocalDateTime(e.RegistrationCloseDate).
+                }
+            </span>
+        </div>
+    }
+
+    @if (!canEnter || e.Categories.Count == 0)
+    {
+        <partial name="_CategoryList" model="e.Categories" />
+    }
+    else
+    {
+        <form asp-action="Enrol" asp-route-id="@e.EventId" method="post">
+            <fieldset>
+                <legend class="visually-hidden">Choose a category</legend>
+                <div class="rd-choice-group" style="grid-template-columns: 1fr">
+                    @foreach (var c in e.Categories)
+                    {
+                        var full = c.SpotsRemaining == 0;
+                        <label class="rd-choice @(full ? "opacity-50" : "")">
+                            <input type="radio" name="categoryId" value="@c.CategoryId" checked="@(Model.SelectedCategoryId == c.CategoryId)" disabled="@full" required />
+                            <span class="d-flex flex-wrap justify-content-between gap-3 w-100 align-items-center">
+                                <span class="d-flex align-items-center gap-3">
+                                    <span class="rd-category-distance">@Display.Distance(c.DistanceKm)</span>
+                                    <span>
+                                        <strong>@c.CategoryName</strong>
+                                        <small class="d-block">
+                                            @(c.MinAge is { } age ? $"Age {age}+ on race day" : "All ages")
+                                            · @(c.GenderRestriction == "Open" ? "Open to all" : $"{c.GenderRestriction} only")
+                                        </small>
+                                    </span>
+                                </span>
+                                <span class="text-end">
+                                    <strong>@Display.Money(c.EntryFee)</strong>
+                                    <small class="d-block">@(c.SpotsRemaining switch { null => "Unlimited spots", 0 => "Full", var n => $"{n} spot{(n == 1 ? "" : "s")} left" })</small>
+                                </span>
+                            </span>
+                        </label>
+                    }
+                </div>
+            </fieldset>
+            @if (categoryError is not null)
+            {
+                <div class="rd-alert rd-alert-error mt-3" role="alert">
+                    <span class="rd-alert-icon" aria-hidden="true">!</span><span>@categoryError</span>
+                </div>
+            }
+            <button type="submit" class="btn btn-rd btn-lg mt-4">Enter now</button>
+        </form>
+    }
+</section>
