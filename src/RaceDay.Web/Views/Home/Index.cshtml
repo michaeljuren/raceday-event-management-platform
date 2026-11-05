@@ -1,8 +1,46 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model List<EventSummary>
+@{
+    ViewData["Title"] = "Find your next race";
+    var signedIn = User.Identity?.IsAuthenticated == true;
 }
+<section class="rd-hero">
+    <p class="rd-eyebrow">Running · Walking · Cycling</p>
+    <h1>Your next <em>start line</em> is waiting</h1>
+    <p>Find road races, fun walks and cycle classics across South Africa. Enter in a few taps and keep every finish time in one place.</p>
+    <div class="rd-actions">
+        @if (signedIn)
+        {
+            <a class="btn btn-rd btn-lg" href="@User.HomeUrl()">Go to my RaceDay</a>
+        }
+        else
+        {
+            <a class="btn btn-rd btn-lg" asp-controller="Account" asp-action="Register">Create a free account</a>
+        }
+        <a class="btn btn-rd-ghost btn-lg" asp-controller="Events" asp-action="Index">Browse all events</a>
+    </div>
+    <div class="rd-hero-stripe">
+        <div><strong>Enter</strong>Pick a distance and you're in</div>
+        <div><strong>Race</strong>Bib numbers and start times</div>
+        <div><strong>Review</strong>Times and positions, all seasons</div>
+    </div>
+</section>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section aria-labelledby="upcoming-heading">
+    <div class="rd-section-title">
+        <h2 id="upcoming-heading">Coming up</h2>
+        <a asp-controller="Events" asp-action="Index">See the full calendar &rarr;</a>
+    </div>
+    @if (Model.Count == 0)
+    {
+        <div class="rd-empty-inline">No upcoming events have been published yet. Check back soon.</div>
+    }
+    else
+    {
+        <div class="rd-event-grid">
+            @foreach (var e in Model)
+            {
+                <partial name="_EventCard" model="new EventCardModel(e, Url.EventDetails(User, e.EventId))" />
+            }
+        </div>
+    }
+</section>

@@ -1,47 +1,126 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+@{
+    var area = ViewContext.RouteData.Values["area"] as string ?? "";
+    var controller = ViewContext.RouteData.Values["controller"] as string ?? "";
+    string Active(string a, string c) =>
+        string.Equals(area, a, StringComparison.OrdinalIgnoreCase) && string.Equals(controller, c, StringComparison.OrdinalIgnoreCase)
+            ? "active" : "";
+    string Current(string a, string c) => Active(a, c) == "active" ? "page" : "false";
+
+    var signedIn = User.Identity?.IsAuthenticated == true;
+    var isOrganizer = signedIn && User.IsOrganizerOrAdmin();
+    var isParticipant = signedIn && User.IsParticipant();
+    var displayName = User.Identity?.Name ?? "";
+    var initials = string.Concat(displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0]));
+}
+<html lang="en-ZA" data-bs-theme="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - RaceDay.Web</title>
-    <script type="importmap"></script>
+    <meta name="theme-color" content="#0b1426" />
+    <title>@ViewData["Title"] · RaceDay</title>
+    <link rel="preload" href="~/fonts/barlow-condensed-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/RaceDay.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
+    <a class="visually-hidden-focusable btn btn-rd position-absolute m-2" href="#main">Skip to content</a>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RaceDay.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-lg rd-navbar sticky-top">
+            <div class="container">
+                <a class="navbar-brand rd-brand" href="@(signedIn ? User.HomeUrl() : "/")">
+                    <span class="rd-brand-mark" aria-hidden="true">R</span>Race<span>Day</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#rd-nav"
+                        aria-controls="rd-nav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
+                <div class="collapse navbar-collapse" id="rd-nav">
+                    <ul class="navbar-nav me-auto gap-lg-1 mt-3 mt-lg-0">
+                        @if (isOrganizer)
+                        {
+                            @if (isParticipant)
+                            {
+                                <li class="rd-nav-section d-lg-none">Organise</li>
+                            }
+                            <li class="nav-item">
+                                <a class="nav-link @Active("Organizer", "Dashboard")" aria-current="@Current("Organizer", "Dashboard")"
+                                   asp-area="Organizer" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(Active("Organizer", "Events") + Active("Organizer", "Categories") + Active("Organizer", "Enrolments") + Active("Organizer", "Results"))"
+                                   asp-area="Organizer" asp-controller="Events" asp-action="Index">@(User.IsInRole(AppRoles.Admin) ? "All events" : "My events")</a>
+                            </li>
+                        }
+                        @if (isParticipant)
+                        {
+                            @if (isOrganizer)
+                            {
+                                <li class="rd-nav-section d-lg-none">Race</li>
+                            }
+                            <li class="nav-item">
+                                <a class="nav-link @(Active("Participant", "Home") + Active("Participant", "Events"))"
+                                   asp-area="Participant" asp-controller="Home" asp-action="Index">Find races</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @Active("Participant", "Enrolments")" aria-current="@Current("Participant", "Enrolments")"
+                                   asp-area="Participant" asp-controller="Enrolments" asp-action="Index">My enrolments</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @Active("Participant", "Results")" aria-current="@Current("Participant", "Results")"
+                                   asp-area="Participant" asp-controller="Results" asp-action="Index">My results</a>
+                            </li>
+                        }
+                        @if (!isParticipant)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @Active("", "Events")" aria-current="@Current("", "Events")"
+                                   asp-area="" asp-controller="Events" asp-action="Index">Browse events</a>
+                            </li>
+                        }
                     </ul>
+                    <div class="d-flex align-items-lg-center gap-2 mt-3 mt-lg-0 flex-column flex-lg-row">
+                        @if (signedIn)
+                        {
+                            <div class="dropdown">
+                                <button class="btn btn-rd-ghost rd-user-chip dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="rd-avatar" aria-hidden="true">@initials</span>
+                                    <span>@displayName</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><h6 class="dropdown-header">@string.Join(" · ", User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value))</h6></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index">My profile</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                            <button type="submit" class="dropdown-item">Log out</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a class="btn btn-rd-ghost" asp-area="" asp-controller="Account" asp-action="Login">Log in</a>
+                            <a class="btn btn-rd" asp-area="" asp-controller="Account" asp-action="Register">Sign up</a>
+                        }
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - RaceDay.Web - <a asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+    <main id="main" class="container py-4 py-lg-5" role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="rd-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+            <span>&copy; @DateTime.Now.Year RaceDay · Road running, walking and cycling in South Africa</span>
+            <a asp-area="" asp-controller="Events" asp-action="Index">Event calendar</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

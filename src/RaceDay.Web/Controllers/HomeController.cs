@@ -1,14 +1,23 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RaceDay.Web.Infrastructure;
 using RaceDay.Web.Models;
+using RaceDay.Web.Models.Api;
+using RaceDay.Web.Services.Api;
 
 namespace RaceDay.Web.Controllers;
 
 [AllowAnonymous]
-public class HomeController : Controller
+public class HomeController(IRaceDayApi api) : Controller
 {
-    public IActionResult Index() => View();
+    /// <summary>Landing page with the next few race days.</summary>
+    public async Task<IActionResult> Index(CancellationToken ct)
+    {
+        var upcoming = await api.GetEventsAsync(new EventQuery(FromDate: Display.Today, PageSize: 6), ct);
+        var events = upcoming.Value?.Items.Where(e => e.Status == "Published").ToList() ?? [];
+        return View(events);
+    }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() =>

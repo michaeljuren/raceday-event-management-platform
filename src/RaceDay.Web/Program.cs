@@ -7,6 +7,9 @@ using RaceDay.Web.Services.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Registration windows are stored in UTC by the API and shown in local (SAST) time.
+Display.UseTimeZone(builder.Configuration["App:TimeZone"]);
+
 // ---------- RaceDay API client (all data comes from the API) ----------
 builder.Services.AddRaceDayApi(builder.Configuration);
 

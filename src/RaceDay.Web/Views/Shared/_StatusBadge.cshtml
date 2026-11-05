@@ -1,0 +1,13 @@
+@model string
+@{
+    var tone = Model switch
+    {
+        "Published" or "Confirmed" or "Finished" or "Paid" => "green",
+        "Draft" or "Pending" or "Unpaid" => "yellow",
+        "Completed" => "blue",
+        "Cancelled" or "Withdrawn" or "DNF" or "DNS" or "DSQ" => "red",
+        "Open" => "orange",
+        _ => "neutral"
+    };
+}
+<span class="rd-badge rd-badge-@tone">@Model</span>

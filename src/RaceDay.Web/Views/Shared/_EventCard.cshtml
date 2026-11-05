@@ -1,0 +1,41 @@
+@model EventCardModel
+@{
+    var e = Model.Event;
+}
+<a class="rd-event-card" href="@Model.Url">
+    <div class="rd-event-banner" data-discipline="@e.Discipline">
+        @if (!string.IsNullOrEmpty(e.BannerImageUrl))
+        {
+            <img src="@e.BannerImageUrl" alt="" loading="lazy" />
+        }
+        @if (Model.ShowStatus)
+        {
+            <partial name="_StatusBadge" model="e.Status" />
+        }
+        else
+        {
+            <span class="rd-badge rd-badge-orange">@e.Discipline</span>
+        }
+        <div class="rd-date-tile" aria-hidden="true">
+            <strong>@e.EventDate.Day</strong>
+            <small>@e.EventDate.ToString("MMM")</small>
+        </div>
+    </div>
+    <div class="rd-event-body">
+        <h3>@e.EventName</h3>
+        <div class="rd-event-meta">
+            <span class="visually-hidden">Date: </span>@Display.Date(e.EventDate) · @Display.Time(e.StartTime)
+        </div>
+        <div class="rd-event-meta">@e.Venue.VenueName, @e.Venue.City · @e.Venue.Province</div>
+        <div class="rd-event-distances">
+            @foreach (var km in e.DistancesKm)
+            {
+                <span class="rd-chip">@Display.Distance(km)</span>
+            }
+            @if (e.DistancesKm.Count == 0)
+            {
+                <span class="text-secondary small">Distances to be announced</span>
+            }
+        </div>
+    </div>
+</a>
