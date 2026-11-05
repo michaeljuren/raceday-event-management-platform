@@ -1,0 +1,96 @@
+@model RaceDay.Web.Areas.Organizer.Controllers.RosterViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = $"Enrolments · {e.EventName}";
+    var active = Model.Entries.Count(x => x.Status is "Pending" or "Confirmed");
+    var rows = Model.Filtered.ToList();
+}
+<nav class="rd-breadcrumb" aria-label="Breadcrumb">
+    <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">&larr; @e.EventName</a>
+</nav>
+
+<div class="rd-page-header">
+    <div>
+        <p class="rd-eyebrow">@Display.Date(e.EventDate) · @e.Venue.VenueName</p>
+        <h1 class="rd-display">Enrolments</h1>
+        <p class="text-secondary">@active active of @Model.Entries.Count total entr@(Model.Entries.Count == 1 ? "y" : "ies").</p>
+    </div>
+    @if (e.EventDate <= Display.Today && e.Status is "Published" or "Completed")
+    {
+        <div class="rd-actions">
+            <a class="btn btn-rd-blue" asp-controller="Results" asp-action="Index" asp-route-eventId="@e.EventId">Capture results</a>
+        </div>
+    }
+</div>
+
+<partial name="_StatusMessages" />
+
+<div class="rd-stats">
+    @foreach (var c in e.Categories)
+    {
+        <a class="rd-stat text-decoration-none @(Model.CategoryId == c.CategoryId ? "is-blue" : "")"
+           asp-route-eventId="@e.EventId" asp-route-categoryId="@c.CategoryId">
+            <div class="rd-stat-label">@c.CategoryName</div>
+            <div class="rd-stat-value">@c.EntryCount</div>
+            <div class="rd-stat-hint">@(c.MaxParticipants is { } max ? $"of {max} spots" : "no limit")</div>
+        </a>
+    }
+</div>
+
+@if (Model.CategoryId is not null)
+{
+    <p><a asp-route-eventId="@e.EventId">Show all categories</a></p>
+}
+
+@if (rows.Count == 0)
+{
+    <div class="rd-empty-inline">No one has entered @(Model.CategoryId is null ? "this event" : "this category") yet.</div>
+}
+else
+{
+    <div class="rd-table-wrap">
+        <table class="table rd-table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Participant</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Bib</th>
+                    <th scope="col">Gender / DOB</th>
+                    <th scope="col">Club</th>
+                    <th scope="col">Emergency contact</th>
+                    <th scope="col">Entered</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Payment</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in rows)
+                {
+                    <tr>
+                        <td>
+                            <span class="fw-semibold">@r.FirstName @r.LastName</span>
+                            <div class="small text-secondary">@r.Email</div>
+                        </td>
+                        <td>@r.CategoryName</td>
+                        <td>@(r.BibNumber ?? "—")</td>
+                        <td class="small text-nowrap">@r.Gender<br /><span class="text-secondary">@Display.ShortDate(r.DateOfBirth)</span></td>
+                        <td class="small">@(r.ClubName ?? "—")</td>
+                        <td class="small">
+                            @if (r.EmergencyContactName is null && r.EmergencyContactPhone is null)
+                            {
+                                <span class="text-secondary">—</span>
+                            }
+                            else
+                            {
+                                @r.EmergencyContactName<br /><span class="text-secondary">@r.EmergencyContactPhone</span>
+                            }
+                        </td>
+                        <td class="small text-nowrap">@Display.LocalDateTime(r.EntryDate)</td>
+                        <td><partial name="_StatusBadge" model="r.Status" /></td>
+                        <td><partial name="_StatusBadge" model="r.PaymentStatus" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
