@@ -1,0 +1,30 @@
+@model RaceDay.Web.Areas.Organizer.Models.CategoryFormViewModel
+@{
+    ViewData["Title"] = $"Edit {Model.CategoryName}";
+}
+<nav class="rd-breadcrumb" aria-label="Breadcrumb">
+    <a asp-action="Index" asp-route-eventId="@Model.EventId">&larr; Categories</a>
+</nav>
+
+<section class="mx-auto" style="max-width: 640px">
+    <div class="rd-page-header">
+        <div>
+            <p class="rd-eyebrow">Edit category</p>
+            <h1 class="rd-display">@Model.CategoryName</h1>
+        </div>
+    </div>
+
+    <partial name="_StatusMessages" />
+
+    <form asp-action="Edit" asp-route-id="@Model.CategoryId" method="post" class="rd-card" novalidate>
+        <partial name="_CategoryFields" model="Model" />
+        <div class="rd-form-actions">
+            <button type="submit" class="btn btn-rd">Save category</button>
+            <a class="btn btn-rd-ghost" asp-action="Index" asp-route-eventId="@Model.EventId">Cancel</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

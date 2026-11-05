@@ -1,0 +1,79 @@
+@model RaceDay.Web.Areas.Organizer.Models.CategoriesPageViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = $"Categories · {e.EventName}";
+}
+<nav class="rd-breadcrumb" aria-label="Breadcrumb">
+    <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">&larr; @e.EventName</a>
+</nav>
+
+<div class="rd-page-header">
+    <div>
+        <p class="rd-eyebrow">@Display.Date(e.EventDate) · @e.Venue.VenueName</p>
+        <h1 class="rd-display">Categories</h1>
+        <p class="text-secondary">Distances and age groups participants can enter.</p>
+    </div>
+</div>
+
+<partial name="_StatusMessages" />
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        @if (e.Categories.Count == 0)
+        {
+            <div class="rd-empty-inline">No categories yet. Add the first one to make the event publishable.</div>
+        }
+        else
+        {
+            <div class="rd-table-wrap">
+                <table class="table rd-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Category</th>
+                            <th scope="col" class="rd-num">Distance</th>
+                            <th scope="col">Rules</th>
+                            <th scope="col" class="rd-num">Fee</th>
+                            <th scope="col" class="rd-num">Entries</th>
+                            <th scope="col"><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in e.Categories)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@c.CategoryName</td>
+                                <td class="rd-num">@Display.Distance(c.DistanceKm)</td>
+                                <td class="small">
+                                    @(c.MinAge is { } age ? $"Age {age}+" : "All ages")<br />
+                                    <span class="text-secondary">@(c.GenderRestriction == "Open" ? "Open" : $"{c.GenderRestriction} only")</span>
+                                </td>
+                                <td class="rd-num">@Display.Money(c.EntryFee)</td>
+                                <td class="rd-num">@c.EntryCount@(c.MaxParticipants is { } max ? $" / {max}" : "")</td>
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-sm btn-rd-ghost" asp-action="Edit" asp-route-id="@c.CategoryId">Edit</a>
+                                    <form asp-action="Delete" asp-route-id="@c.CategoryId" asp-route-eventId="@e.EventId" method="post" class="d-inline"
+                                          data-confirm="Remove the @c.CategoryName category?">
+                                        <button type="submit" class="btn btn-sm btn-rd-danger" disabled="@(c.EntryCount > 0)"
+                                                title="@(c.EntryCount > 0 ? "Categories with entries cannot be removed" : null)">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <form asp-action="Create" asp-route-eventId="@e.EventId" method="post" class="rd-card" novalidate>
+            <h2 class="rd-card-title">Add a category</h2>
+            <partial name="_CategoryFields" for="NewCategory" />
+            <button type="submit" class="btn btn-rd w-100 mt-4">Add category</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
