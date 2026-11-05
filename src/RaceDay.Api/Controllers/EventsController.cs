@@ -236,6 +236,47 @@ public class EventsController(RaceDayDbContext db, TimeProvider clock) : ApiCont
         return Ok(EventDetailResponse.From(evt));
     }
 
+    /// <summary>Mark a Published event as Completed, publishing its results.</summary>
+    /// <remarks>
+    /// Only allowed once the event has taken place (its date is today or earlier). Results can still be
+    /// corrected afterwards with PUT /api/results/{id}.
+    /// </remarks>
+    [HttpPost("{id:int}/complete")]
+    [Authorize(Roles = RoleNames.OrganizerOrAdmin)]
+    [ProducesResponseType<EventDetailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Complete(int id, CancellationToken ct)
+    {
+        var evt = await LoadEventAsync(id, tracking: true, ct);
+        if (evt is null)
+        {
+            return NotFoundProblem($"Event {id} not found.");
+        }
+
+        if (!CanManage(evt))
+        {
+            return ForbiddenProblem("Only the event's organizer or an admin can publish its results.");
+        }
+
+        if (evt.Status != EventStatus.Published)
+        {
+            return BadRequestProblem(nameof(Event.Status), $"Only Published events can be completed; this event is {evt.Status}.");
+        }
+
+        if (evt.EventDate > DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime))
+        {
+            return BadRequestProblem(nameof(Event.EventDate), "Results can only be published once the event has taken place.");
+        }
+
+        evt.Status = EventStatus.Completed;
+        evt.UpdatedAt = clock.GetUtcNow().UtcDateTime;
+        await db.SaveChangesAsync(ct);
+        return Ok(EventDetailResponse.From(evt));
+    }
+
     /// <summary>Upload (or replace) the event's banner image.</summary>
     /// <remarks>
     /// Send <c>multipart/form-data</c> with a single <c>file</c> field: a JPEG, PNG or WebP image of at most 5 MB.
